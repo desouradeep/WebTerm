@@ -12,29 +12,27 @@ $(function() {
     // Socket.io specific code
     var socket = io.connect('/terminal');
 
-    // Update the DOM when we get new data from the server
-    socket.on('data', function(data) {
-        console.log(data)
+    // Output/Errors for commands recieved here
+    socket.on('command', function(payload) {
+        var payload = JSON.parse(payload);
+        console.log(payload)
     });
 
     // Client UUID sent on this channel on successful connection
     socket.on('establish-connection', function(payload) {
-        webterm_uuid = JSON.parse(payload)['uuid'];
-        console.log("Recieved Client UUID: " + webterm_uuid)
+        var payload = JSON.parse(payload);
+        webterm_uuid = payload['uuid'];
+        console.log("Recieved Client UUID: " + webterm_uuid);
     });
 
 
     $('#start').click(function () {
         var command = $("#command").val()
         var payload = {
+            'uuid': webterm_uuid,
             'command': command,
         }
         socket.emit('user message', JSON.stringify(payload));
-        return false;
-    });
-
-    $('#stop').click(function () {
-        socket.emit('user message', 'stop');
         return false;
     });
 });

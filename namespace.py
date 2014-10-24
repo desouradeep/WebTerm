@@ -8,7 +8,7 @@ from socketio.mixins import BroadcastMixin, RoomsMixin
 
 
 class WebTermNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
-    client_threads = []
+    client_threads = {}
     logging.basicConfig(filename='webterm.log', level=logging.INFO)
 
     def generate_uuid(self):
@@ -19,7 +19,7 @@ class WebTermNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         new_client_thread = ClientThread(UUID)
 
         logging.info("Attempting to add new client...")
-        self.client_threads.append(new_client_thread)
+        self.client_threads[UUID] = new_client_thread
         logging.info("New client added.")
 
         new_client_thread.start()
@@ -49,8 +49,33 @@ class WebTermNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         '''
         Called when a client sends a message to the realtime server
         '''
+        # these will record errors and results if any and will be placed
+        # in the payload json which is sent back to the client
+        error = ''
+        result = ''
+
         logging.info("New command recieved from a client.")
         payload = json.loads(payload)
-        print "Recieved: ", payload['command']
 
-        #self.emit('data', json.dumps(response_payload))
+        client_thread_uuid = payload.get("uuid", None)
+        if client_thread_uuid is None:
+            logging.info("Looks like the client is fake?!!")
+            error = "No client UUID found, cannot proceed with a valid UUID"
+        else:
+            try:
+                client_thread = self.client_threads[client_thread_uuid]
+
+                # valid client found
+                command = payload.get('command', '')
+                result = client_thread.execute_command(command)
+
+            except KeyError:
+                logging.info("Client thread doesn't exist")
+                error = 'No matching client key found.'
+
+            payload = {
+                'error': error,
+                'result': result,
+            }
+
+        self.emit('command', json.dumps(payload))

@@ -1,9 +1,6 @@
 import threading
 import sh
-
-
-def log(data):
-    print "LOG: %s" % (data)
+import logging
 
 
 class ClientThread(threading.Thread):
@@ -13,15 +10,19 @@ class ClientThread(threading.Thread):
         self.UUID = UUID
 
     def run(self):
-        log("Starting")
+        logging.info("Starting thread %s" % (self.UUID))
 
     def execute_command(self, cmd):
+        output = ''
+        error = ''
         cmd = tuple(cmd.split())
+
         try:
             if cmd[0] == 'ls':
                 cmd += ('--color=auto', )
             run_function = getattr(sh, cmd[0])
             output = run_function(*cmd[1:])
-            log("OUT: %s" % output)
-        except sh.CommandNotFound, e:
-            log("ERR: %s" % e)
+        except Exception, e:
+            error = e.message
+
+        return output  + "\n" +  error
