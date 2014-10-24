@@ -21,8 +21,8 @@ class ClientThread(threading.Thread):
             if cmd[0] == 'ls':
                 cmd += ('--color=auto', )
             run_function = getattr(sh, cmd[0])
-            output = run_function(*cmd[1:])
+            output = str(run_function(*cmd[1:]))
         except Exception, e:
             error = e.message
 
-        return output  + "\n" +  error
+        return output + "\n" + error
