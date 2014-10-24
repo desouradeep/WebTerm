@@ -1,35 +1,14 @@
 from gevent import monkey
-import gevent
-import json
 
-import subprocess
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
-from socketio.namespace import BaseNamespace
-from socketio.mixins import BroadcastMixin, RoomsMixin
 
 monkey.patch_all()
 
-
-class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
-
-    def recv_connect(self):
-        def notify():
-            while True:
-                self.broadcast_event(
-                    'data',
-                    hello(),
-                )
-                gevent.sleep(1)
-        self.spawn(notify)
-
-    def on_user_message(self, payload):
-        payload = json.loads(payload)
-        print "action: %s" % (payload['action'])
-        self.broadcast_event('data', 'command accepted')
+from namespace import WebTermNamespace
 
 
-class Application(object):
+class Application:
     def __init__(self):
         self.buffer = []
 
@@ -55,24 +34,9 @@ class Application(object):
             return [data]
 
         if path.startswith("socket.io"):
-            socketio_manage(environ, {'/terminal': EnrouteNamespace})
+            socketio_manage(environ, {'/terminal': WebTermNamespace})
         else:
             return not_found(start_response)
-
-
-def system(cmd):
-    """
-    Invoke a shell command. Primary replacement for os.system calls.
-    """
-    ret = subprocess.Popen(
-        cmd, shell=True, stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-    out, err = ret.communicate()
-    return out, err
-
-
-def hello():
-    return "hello world"
 
 
 def not_found(start_response):
