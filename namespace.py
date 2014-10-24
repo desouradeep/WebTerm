@@ -3,8 +3,25 @@ from socketio.mixins import BroadcastMixin, RoomsMixin
 
 import json
 from uuid import uuid4
+from client_thread import ClientThread
+
 
 class WebTermNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+    def __init__(self):
+        BaseNamespace.__init__(self)
+        RoomsMixin.__init__(self)
+        BroadcastMixin.__init__(self)
+
+        # client_threads is used to record the
+        # threads dedicated to the clients
+        self.client_threads = []
+
+    def generate_uuid(self):
+        return str(uuid4())
+
+    def add_new_client(self, UUID):
+        new_client_thread = ClientThread(UUID)
+        self.client_threads.append(new_client_thread)
 
     def recv_connect(self):
         '''
@@ -12,7 +29,12 @@ class WebTermNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         Generates a uuid, assigns it to the client. This uuid is to be used to
         keep track of the thread assigned to the client.
         '''
-        new_uuid = str(uuid4())
+        new_uuid = self.generate_uuid()
+
+        # create a dedicated thread for the client, and add it to the
+        # client threads list
+        self.add_new_client(new_uuid)
+
         payload = {
             "uuid": new_uuid
         }
@@ -25,10 +47,5 @@ class WebTermNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         '''
         payload = json.loads(payload)
         print "Recieved: ", payload['command']
-        out, err = system(payload['command'])
-        response_payload = {
-            'output': out,
-            'error': err,
-        }
 
         self.emit('data', json.dumps(response_payload))
