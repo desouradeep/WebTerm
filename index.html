@@ -17,11 +17,17 @@ $(function() {
         console.log(data)
     });
 
+    // Client UUID sent on this channel on successful connection
+    socket.on('establish-connection', function(payload) {
+        webterm_uuid = JSON.parse(payload)['uuid'];
+        console.log("Recieved Client UUID: " + webterm_uuid)
+    });
+
+
     $('#start').click(function () {
-        var url = $("#url").val()
+        var command = $("#command").val()
         var payload = {
-            'action': 'start',
-            'url': url,
+            'command': command,
         }
         socket.emit('user message', JSON.stringify(payload));
         return false;
@@ -37,7 +43,7 @@ $(function() {
 <body>
 
 <form>
-    <input id="url">
+    <input id="command">
     <button id="start">Enter</button>
 </form>
 

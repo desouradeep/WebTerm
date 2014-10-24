@@ -3,12 +3,13 @@ from gevent import monkey
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
 
-monkey.patch_all()
-
 from namespace import WebTermNamespace
 
 
-class Application:
+monkey.patch_all()
+
+
+class Application(object):
     def __init__(self):
         self.buffer = []
 

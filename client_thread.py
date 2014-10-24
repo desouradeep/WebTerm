@@ -7,9 +7,10 @@ def log(data):
 
 
 class ClientThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, UUID):
         threading.Thread.__init__(self)
         self.setDaemon(True)
+        self.UUID = UUID
 
     def run(self):
         log("Starting")
