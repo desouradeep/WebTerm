@@ -16,22 +16,31 @@ class ClientThread(threading.Thread):
         self.set_last_called()
 
     def set_last_called(self):
+        '''
+        Update the datetime whenever the thread is called
+        '''
         self.last_called = datetime.now()
 
     def isZombie(self):
+        '''
+        Determine if the thread is zombified
+        '''
         datetime_now = datetime.now()
         inactice_time = datetime_now - self.last_called
 
         if inactice_time.seconds > zombie_time:
-            zombied = True
+            zombified = True
         else:
-            zombied = False
-        return zombied
+            zombified = False
+        return zombified
 
     def run(self):
         logging.info("Starting thread %s" % (self.UUID))
 
     def execute_command(self, cmd):
+        '''
+        Called to execute commands
+        '''
         self.set_last_called()
         output = ''
         error = ''
